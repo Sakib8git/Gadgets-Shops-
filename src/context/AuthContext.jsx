@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { isAdmin } from '../config/admins';
 
 const AuthContext = createContext(null);
 
@@ -17,7 +18,12 @@ export function AuthProvider({ children }) {
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ user, loading: user === undefined, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      loading: user === undefined,
+      logout,
+      admin: isAdmin(user),
+    }}>
       {children}
     </AuthContext.Provider>
   );

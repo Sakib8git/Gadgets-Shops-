@@ -82,3 +82,6 @@ export const products = [
 ];
 
 export const categories = ['All', ...new Set(products.map((p) => p.category))];
+
+// Alias used by dashboard pages
+export const localProducts = products;
