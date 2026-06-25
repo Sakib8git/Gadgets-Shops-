@@ -1,32 +1,40 @@
 // In dev, Vite proxies /api → http://localhost:5000/api
-// In production, set VITE_API_URL to your deployed backend URL
+// In production, set VITE_API_URL to your deployed backend URL.
+// Leave unset on Netlify — the fallback data kicks in automatically.
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
 // ── Low-level fetch wrapper ──────────────────────────────────────────────────
+// Returns parsed JSON or throws. Never throws outside of try/catch callers.
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
   });
+
+  // Guard: if the response isn't JSON (e.g. Netlify 404 HTML page),
+  // throw before calling .json() so the catch block in each function
+  // can fall back to local data cleanly.
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Non-JSON response (${res.status}) — server likely offline`);
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Request failed');
   return data;
 }
 
-// ── Local fallback data (used when MongoDB server is offline) ────────────────
+// ── Local fallback data (used when MongoDB / Express server is offline) ──────
 import { products as localProducts } from '../data/products.js';
 import { defaultTestimonials as localReviews } from '../data/reviews.js';
 
 // In-memory store for reviews submitted while server is offline
 let offlineReviews = [];
 
-// Normalise local products so they have the same shape as MongoDB docs
-// (_id, reviews count) so the rest of the UI works without changes.
+// Normalise local products so they share the same shape as MongoDB docs
+// (_id used for keys / router links throughout the UI)
 function normaliseProduct(p) {
-  return {
-    ...p,
-    _id: String(p.id),    // components use _id for keys / links
-  };
+  return { ...p, _id: String(p.id) };
 }
 
 function applyFilters(list, { search, category, sort, limit } = {}) {
@@ -64,7 +72,6 @@ export const getProducts = async (params = {}) => {
     ).toString();
     return await request(`/products${qs ? `?${qs}` : ''}`);
   } catch {
-    // ↳ Server unreachable — use local JSON
     const list = applyFilters(localProducts.map(normaliseProduct), params);
     return { products: list, total: list.length, page: 1, _fallback: true };
   }
@@ -82,7 +89,6 @@ export const getProductById = async (id) => {
   try {
     return await request(`/products/${id}`);
   } catch {
-    // id might be a numeric string ("1") or a real MongoDB ObjectId
     const found =
       localProducts.find((p) => String(p.id) === String(id)) ??
       localProducts.find((p) => String(p._id) === String(id));
@@ -97,7 +103,6 @@ export const getReviews = async () => {
   try {
     return await request('/reviews');
   } catch {
-    // Merge seed reviews with any submitted offline this session
     const seed = localReviews.map((r) => ({ ...r, _id: String(r.id) }));
     return [...offlineReviews, ...seed];
   }
@@ -107,7 +112,6 @@ export const createReview = async (body) => {
   try {
     return await request('/reviews', { method: 'POST', body: JSON.stringify(body) });
   } catch {
-    // Save to in-memory list so it shows up immediately on the home page
     const avatar = body.name
       .split(' ')
       .map((w) => w[0]?.toUpperCase() ?? '')
