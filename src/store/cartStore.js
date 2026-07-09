@@ -1,44 +1,49 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-const useCartStore = create((set, get) => ({
-  items: [],
+// Normalise the id — products from MongoDB use _id, local products use id.
+const pid = (product) => String(product._id ?? product.id);
 
-  addToCart: (product) => {
-    const items = get().items;
-    const existing = items.find((i) => i.id === product.id);
-    if (existing) {
-      set({
-        items: items.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        ),
-      });
-    } else {
-      set({ items: [...items, { ...product, quantity: 1 }] });
+const useCartStore = create(
+  persist(
+    (set, get) => ({
+      items: [],
+
+      addToCart: (product) => {
+        const items = get().items;
+        const key   = pid(product);
+        const existing = items.find((i) => pid(i) === key);
+
+        if (existing) {
+          set({
+            items: items.map((i) =>
+              pid(i) === key ? { ...i, quantity: i.quantity + 1 } : i
+            ),
+          });
+        } else {
+          set({ items: [...items, { ...product, quantity: 1 }] });
+        }
+      },
+
+      removeFromCart: (id) => {
+        set({ items: get().items.filter((i) => pid(i) !== String(id)) });
+      },
+
+      updateQuantity: (id, quantity) => {
+        if (quantity < 1) return;
+        set({
+          items: get().items.map((i) =>
+            pid(i) === String(id) ? { ...i, quantity } : i
+          ),
+        });
+      },
+
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: 'myshop-cart',   // localStorage key
     }
-  },
-
-  removeFromCart: (id) => {
-    set({ items: get().items.filter((i) => i.id !== id) });
-  },
-
-  updateQuantity: (id, quantity) => {
-    if (quantity < 1) return;
-    set({
-      items: get().items.map((i) =>
-        i.id === id ? { ...i, quantity } : i
-      ),
-    });
-  },
-
-  clearCart: () => set({ items: [] }),
-
-  get totalItems() {
-    return get().items.reduce((sum, i) => sum + i.quantity, 0);
-  },
-
-  get totalPrice() {
-    return get().items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  },
-}));
+  )
+);
 
 export default useCartStore;
