@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { getProducts, getCategories, getReviews } from '../api/client';
+import { getProducts, getCategories } from '../api/client';
+import useReviewStore from '../store/reviewStore';
 
 function Stars({ rating, size = 'sm' }) {
   const cls = size === 'lg' ? 'h-5 w-5' : 'h-4 w-4';
@@ -52,11 +53,13 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState('default');
   const searchQuery = searchParams.get('search') || '';
 
+  // Live review store — updates instantly when user submits feedback
+  const testimonials = useReviewStore((s) => s.reviews);
+
   // API state
-  const [allProducts, setAllProducts]       = useState([]);
-  const [categories, setCategories]         = useState(['All']);
-  const [testimonials, setTestimonials]     = useState([]);
-  const [heroProducts, setHeroProducts]     = useState([]);
+  const [allProducts, setAllProducts]         = useState([]);
+  const [categories, setCategories]           = useState(['All']);
+  const [heroProducts, setHeroProducts]       = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Fetch categories once
@@ -77,13 +80,10 @@ export default function HomePage() {
       .finally(() => setLoadingProducts(false));
   }, [searchQuery, activeCategory, sortBy]);
 
-  // Fetch hero preview products and reviews once
+  // Fetch hero preview products once
   useEffect(() => {
     getProducts({ limit: 4 })
       .then(({ products }) => setHeroProducts(products))
-      .catch(() => {});
-    getReviews()
-      .then(setTestimonials)
       .catch(() => {});
   }, []);
 
