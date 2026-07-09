@@ -64,4 +64,54 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// POST /api/products
+router.post('/', async (req, res) => {
+  try {
+    const { name, category, price, description, image, rating, reviews } = req.body;
+    if (!name || !category || !price || !description || !image) {
+      return res.status(400).json({ message: 'name, category, price, description and image are required.' });
+    }
+    const product = await Product.create({
+      name, category, image, description,
+      price:   Number(price),
+      rating:  Number(rating)  || 0,
+      reviews: Number(reviews) || 0,
+    });
+    res.status(201).json(product);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/products/:id
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, category, price, description, image, rating, reviews } = req.body;
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { name, category, image, description,
+        price:   Number(price),
+        rating:  Number(rating)  || 0,
+        reviews: Number(reviews) || 0,
+      },
+      { new: true, runValidators: true }
+    );
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/products/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 export default router;

@@ -91,6 +91,35 @@ export const getProductById = async (id) => {
   }
 };
 
+// ── Admin product mutations (always go to server, fallback to store) ──────────
+
+export const createProduct = async (body) => {
+  try {
+    return await request('/products', { method: 'POST', body: JSON.stringify(body) });
+  } catch {
+    // Offline fallback — save to Zustand only
+    return useProductStore.getState().addProduct(body);
+  }
+};
+
+export const updateProduct = async (id, body) => {
+  try {
+    return await request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+  } catch {
+    useProductStore.getState().updateProduct(id, body);
+    return { ...body, _id: id };
+  }
+};
+
+export const deleteProduct = async (id) => {
+  try {
+    return await request(`/products/${id}`, { method: 'DELETE' });
+  } catch {
+    useProductStore.getState().deleteProduct(id);
+    return { message: 'Deleted locally' };
+  }
+};
+
 // ── Reviews ──────────────────────────────────────────────────────────────────
 
 export const getReviews = async () => {
