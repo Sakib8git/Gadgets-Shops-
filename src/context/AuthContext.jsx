@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { isAdmin } from '../config/admins';
+import useCartStore from '../store/cartStore';
+import useSellerStore from '../store/sellerStore';
 
 const AuthContext = createContext(null);
 
@@ -10,19 +12,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      // Clear cart when user logs out
+      if (!firebaseUser) {
+        useCartStore.getState().clearCart();
+      }
       setUser(firebaseUser ?? null);
     });
     return unsubscribe;
   }, []);
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    useCartStore.getState().clearCart();   // clear immediately on explicit logout
+    await signOut(auth);
+  };
+
+  const isSeller = user
+    ? isAdmin(user) || useSellerStore.getState().isSeller(user.uid)
+    : false;
 
   return (
     <AuthContext.Provider value={{
       user,
       loading: user === undefined,
       logout,
-      admin: isAdmin(user),
+      admin:  isAdmin(user),
+      seller: isSeller,
     }}>
       {children}
     </AuthContext.Provider>
