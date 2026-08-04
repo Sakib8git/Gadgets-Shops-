@@ -309,6 +309,7 @@ npm run seed   # clears + repopulates products and reviews in Atlas
 
 ---
 
+
 ## 📅 Built
 
 July 2026 — developed iteratively with Kiro AI.
