@@ -58,10 +58,10 @@ export default function DashboardLayout({ children, type = 'user' }) {
 
         {/* Logo */}
         <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
-          <NavLink to="/" className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
-            MyShop
+          <NavLink to="/" className="flex items-center">
+            <img src="/mytech.png" alt="MyTech" className="h-8 w-auto object-contain" />
           </NavLink>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{roleLabel} Dashboard</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{roleLabel} Dashboard</p>
         </div>
 
         {/* Nav */}

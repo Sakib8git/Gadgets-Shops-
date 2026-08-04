@@ -146,8 +146,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
 
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
-          MyShop
+        <Link to="/" className="shrink-0 flex items-center">
+          <img src="/mytech.png" alt="MyTech" className="h-9 w-auto object-contain" />
         </Link>
 
         {/* Search */}
