@@ -147,7 +147,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link to="/" className="shrink-0 flex items-center">
-          <img src="/mytech.png" alt="MyTech" className="h-9 w-auto object-contain" />
+          <img src="/mytech.png" alt="MyTech" className="h-14 w-auto object-contain" />
         </Link>
 
         {/* Search */}
