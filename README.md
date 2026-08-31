@@ -7,7 +7,7 @@ A full-stack e-commerce web application built with **React + Vite**, **Express**
 ## 🚀 Live Demo
 
 **Frontend:** [https://lustrous-syrniki-1db7db.netlify.app](https://gadgets-shops.netlify.app/)
-
+ 
 ---
 
 ## 🗂️ Project Structure
